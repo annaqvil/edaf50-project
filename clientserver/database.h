@@ -9,19 +9,11 @@
 #include <string>
 #include <map>
 
-class Database
-{
-public:
-    Database() {}
-    virtual ~Database() {}
-    virtual std::vector<Newsgroup> listNewsgroups() const = 0;  // "= 0" part makes this method pure virtual, and
-                                                                // also makes this class abstract.
-    virtual bool createNewsgroup(const std::string name) const = 0;
-    virtual bool deleteNewsgroup(const int articleId) const = 0;
-    virtual std::vector<Article> listArticles(const int groupId) = 0;
-    virtual Article readArticle(const int articleId) = 0;
-    virtual bool writeArticle(const int groupId, const std::string title, const std::string author, const std::string text) = 0;
-    virtual bool deleteArticle(const int groupId) = 0;
+struct Article {
+    int id;
+    std::string title;
+    std::string author;
+    std::string text;
 };
 
 struct Newsgroup {
@@ -30,9 +22,19 @@ struct Newsgroup {
     std::map<int, Article> articles;
 };
 
-struct Article {
-    int id;
-    std::string title;
-    std::string author;
-    std::string text;
+class Database
+{
+public:
+    Database() {}
+    virtual ~Database() = 0;
+    virtual std::vector<Newsgroup> listNewsgroups() const = 0;  // "= 0" part makes this method pure virtual, and
+                                                                // also makes this class abstract.
+    virtual bool createNewsgroup(const std::string name) = 0;
+    virtual bool deleteNewsgroup(const int articleId) = 0;
+    virtual std::vector<Article> listArticles(const int groupId) const = 0;
+    virtual Article readArticle(const int groupId, const int articleId) const = 0;
+    virtual bool writeArticle(const int groupId, const std::string title, const std::string author, const std::string text) = 0;
+    virtual bool deleteArticle(const int groupId, const int articleId) = 0;
+private:
+    int idCounter = 0;
 };
