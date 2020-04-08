@@ -1,4 +1,6 @@
+#include <cstdlib>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include "connection.h"
 
@@ -6,13 +8,21 @@ using std::endl;
 using std::string; 
 using std::cout; 
 using std::cin; 
+using std::cerr;
+using std::stoi;
+using std::exception;
 
 void write(const Connection& conn, string ){
 	// do weird shit
 }
 
-void read(const Connection& conn){
-	//write shit
+string read(const Connection& conn){
+	    string s;
+        char   ch;
+        while ((ch = conn.read()) != '$') {
+                s += ch;
+        }
+        return s;
 }
 
 Connection init(int argc, char* argv[]){
