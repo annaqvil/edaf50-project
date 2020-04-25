@@ -1,31 +1,57 @@
-#include "volatiledatabase.h"
+#include "permanentdatabase.h"
 #include <utility>
 #include <map>
 #include <iostream>
+#include <filesystem>
+#include <cstdlib>
+#include <direct.h>
+#include <fstream>  //for outfile
 
-//VolatileDatabase::VolatileDatabase() {}
+
+PermanentDatabase::PermanentDatabase() {
+	if (_mkdir("db")==-1) {
+		std::cout << "not nice" << std::endl;
+	} else {
+		std::cout << "nice" << std::endl;
+	}
+}
 //VolatileDatabase::~VolatileDatabase() {}
 
-std::vector<Newsgroup> VolatileDatabase::listNewsgroups() const {
+std::vector<Newsgroup> PermanentDatabase::listNewsgroups() const {
 	std::vector<Newsgroup> result;
 	for (auto pair : newsgroups) {
 		result.push_back(pair.second);
 	}
 	return result;
 }    
-bool VolatileDatabase::createNewsgroup(const std::string name) {
+bool PermanentDatabase::createNewsgroup(const std::string name) {
 	Newsgroup ng;
 	int id = idCounter++;
 	ng.id = id;
 	ng.name = name;
+	if (newsgroupNames.count(name)>0) {
+		return false;
+	}
 	newsgroups[id]=ng;
+	std::string temp = "db\\" + std::to_string(id);
+	if (_mkdir(temp.c_str())==-1) {
+		std::cout << "Warning: Could not create directory '" << id << "'." << std::endl;
+		return false;
+	}
+	std::ofstream outfile("db\\" + std::to_string(id) + "\\data.txt");
+	outfile << ng.name << std::endl;
+
 	return true;
 };
 
-bool VolatileDatabase::deleteNewsgroup(const int groupId) {
-	return newsgroups.erase(groupId);
+bool PermanentDatabase::deleteNewsgroup(const int groupId) {
+	if (newsgroups.erase(groupId) > 0) {
+		
+		return true;
+	}
+	return false;
 }
-std::vector<Article> VolatileDatabase::listArticles(const int groupId) const {
+std::vector<Article> PermanentDatabase::listArticles(const int groupId) const {
 	std::vector<Article> result;
 	for (auto thing : newsgroups.at(groupId).articles) {
 		result.push_back(thing.second);
@@ -33,10 +59,10 @@ std::vector<Article> VolatileDatabase::listArticles(const int groupId) const {
 	return result;
 }
 
-Article VolatileDatabase::readArticle(const int groupId, const int articleId) const {
+Article PermanentDatabase::readArticle(const int groupId, const int articleId) const {
 	return newsgroups.at(groupId).articles.at(articleId);
 }
-bool VolatileDatabase::writeArticle(const int groupId, const std::string title, const std::string author, const std::string text) {
+bool PermanentDatabase::writeArticle(const int groupId, const std::string title, const std::string author, const std::string text) {
 	int id = idCounter++;	
 	Article article;
 	article.author = author;
@@ -53,7 +79,7 @@ bool VolatileDatabase::writeArticle(const int groupId, const std::string title, 
 	}
 	return false;
 }
-bool VolatileDatabase::deleteArticle(const int groupId, const int articleId) {
+bool PermanentDatabase::deleteArticle(const int groupId, const int articleId) {
 	if (newsgroups.count(groupId > 0)) {
 		return newsgroups.at(groupId).articles.erase(articleId);
 	} else {
@@ -63,8 +89,8 @@ bool VolatileDatabase::deleteArticle(const int groupId, const int articleId) {
 }
 
 int main() {
-	VolatileDatabase db;
-	if (db.createNewsgroup("´Fabbe news")) {
+	PermanentDatabase db;
+	if (db.createNewsgroup("Fabbe news")) {
 		std::cout << "Success! ";
 	} else {
 		std::cout << "Failure! ";

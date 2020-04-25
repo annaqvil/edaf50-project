@@ -1,0 +1,22 @@
+# Targets
+
+PROGS =  testvolatiledatabase testpermanentdatabase
+
+all: $(PROGS)
+
+testvolatiledatabase: volatiledatabase.o
+	g++ -o volatiledatabase volatiledatabase.o
+
+testpermanentdatabase: permanentdatabase.o
+	g++ -o permanentdatabase permanentdatabase.o
+
+# Rules to create the object files.
+volatiledatabase.o: volatiledatabase.cc volatiledatabase.h database.h
+	g++ -c volatiledatabase.cc -std=c++11
+
+permanentdatabase.o: permanentdatabase.cc permanentdatabase.h database.h
+	g++ -c permanentdatabase.cc -std=c++11
+
+clean:
+	rm *.o
+	rm *.exe

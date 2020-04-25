@@ -4,12 +4,13 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
 
-class VolatileDatabase : Database
+class PermanentDatabase : Database
 {
 public:
-    VolatileDatabase() {}
-    //~VolatileDatabase() override;
+    PermanentDatabase();
+    //~PermanentDatabase() override;
     std::vector<Newsgroup> listNewsgroups() const override;
     bool createNewsgroup(const std::string name) override;
     bool deleteNewsgroup(const int articleId) override;
@@ -19,4 +20,5 @@ public:
     bool deleteArticle(const int groupId, const int articleId) override;
 private:
     std::map<int, Newsgroup> newsgroups;
+    std::set<std::string> newsgroupNames;
 };

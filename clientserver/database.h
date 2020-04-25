@@ -26,7 +26,7 @@ class Database
 {
 public:
     Database() {}
-    virtual ~Database() = 0;
+    //virtual ~Database() = 0;
     virtual std::vector<Newsgroup> listNewsgroups() const = 0;  // "= 0" part makes this method pure virtual, and
                                                                 // also makes this class abstract.
     virtual bool createNewsgroup(const std::string name) = 0;
@@ -35,6 +35,6 @@ public:
     virtual Article readArticle(const int groupId, const int articleId) const = 0;
     virtual bool writeArticle(const int groupId, const std::string title, const std::string author, const std::string text) = 0;
     virtual bool deleteArticle(const int groupId, const int articleId) = 0;
-private:
+protected:
     int idCounter = 0;
 };
