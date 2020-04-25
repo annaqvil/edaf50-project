@@ -64,7 +64,7 @@ bool VolatileDatabase::deleteArticle(const int groupId, const int articleId) {
 
 int main() {
 	VolatileDatabase db;
-	if (db.createNewsgroup("´Fabbe news")) {
+	if (db.createNewsgroup("Â´Fabbe news")) {
 		std::cout << "Success! ";
 	} else {
 		std::cout << "Failure! ";
