@@ -9,7 +9,7 @@ class VolatileDatabase : Database
 {
 public:
     VolatileDatabase() {}
-    ~VolatileDatabase() override;
+    //~VolatileDatabase() override;
     std::vector<Newsgroup> listNewsgroups() const override;
     bool createNewsgroup(const std::string name) override;
     bool deleteNewsgroup(const int articleId) override;
