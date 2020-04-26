@@ -22,7 +22,9 @@ LDFLAGS =   -g
 
 # Targets
 
-all: libclientserver.a
+PROGS = client
+
+all: libclientserver.a $(PROGS)
 	make -C test
 
 # Create the library; ranlib is for Darwin (OS X) and maybe other systems.
@@ -31,6 +33,7 @@ all: libclientserver.a
 libclientserver.a: connection.o server.o client.o messageHandler.o
 	ar rv libclientserver.a  connection.o server.o
 	ranlib libclientserver.a
+client: client.o connection.o messageHandler.o
 
 # Phony targets
 .PHONY: all clean distclean
