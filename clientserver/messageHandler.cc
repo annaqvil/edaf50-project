@@ -4,6 +4,7 @@
 #include <string>
 #include "connection.h"
 #include "protocol.h"
+#include "messageHandler.h"
 
 using std::endl;
 using std::string; 
@@ -14,20 +15,23 @@ using std::stoi;
 using std::exception;
 
 
-void sendByte(Connection& conn, int code){
+MessageHandler::MessageHandler(Connection& c): conn(c) {}
+
+
+void MessageHandler::sendByte(const char code){
 	try{
-		conn.write(static_cast<const char>(code)); 
+		conn.write(code); 
 	} catch (exception& e){
 		cerr << "Could not send byte" << e.what() << endl; 
 	}
 }
 
 
-void sendCode(Connection& conn, Protocol code){
-	sendByte(conn, static_cast<const char>(code)); 
+void MessageHandler::sendCode(Protocol code){
+	sendByte(static_cast<const char>(code)); 
 }
 
-void sendInt(Connection& conn, int value){
+void MessageHandler::sendInt(int value){
 	try {
 		conn.write((value >> 24) & 0xFF);
         conn.write((value >> 16) & 0xFF);
@@ -38,20 +42,20 @@ void sendInt(Connection& conn, int value){
 	}
 }
 
-void sendIntParameter(Connection& conn, int param){
-	sendCode(conn, Protocol::PAR_NUM);
-	sendInt(conn, param);
+void MessageHandler::sendIntParameter(int param){
+	sendCode(Protocol::PAR_NUM);
+	sendInt(param);
 }
 
-void sendStringParameter(Connection& conn, string param){
-	sendCode(conn, Protocol::PAR_STRING);
-	sendInt(conn, param.length());
+void MessageHandler::sendStringParameter(string param){
+	sendCode(Protocol::PAR_STRING);
+	sendInt(param.length());
 	for (unsigned int i = 0; i < param.length(); i++){
-		sendByte(conn, param.at(i));
+		sendByte(param.at(i));
 	}
 }
 
-int recvByte(Connection& conn){
+unsigned char MessageHandler::recvByte(){
 	int code = 0;
 	try{
 		code = conn.read(); 
@@ -61,7 +65,7 @@ int recvByte(Connection& conn){
 	return code; 
 }
 
-Protocol recvCommand(Connection& conn){
+Protocol MessageHandler::recvCommand(){
 	Protocol command = Protocol::UNDEFINED; 
 	try{
 		command = static_cast<const Protocol>(conn.read()); 
@@ -71,27 +75,27 @@ Protocol recvCommand(Connection& conn){
 	return command;
 }
 
-int recvInt(Connection& conn){
-	int b1 = recvByte(conn);
-	int b2 = recvByte(conn);
-	int b3 = recvByte(conn);
-	int b4 = recvByte(conn);
+int MessageHandler::recvInt(){
+	int b1 = recvByte();
+	int b2 = recvByte();
+	int b3 = recvByte();
+	int b4 = recvByte();
 	return b1 << 24 | b2 << 16 | b3 << 8 | b4;
 }
 
-int recvIntParameter(Connection& conn){
-    if(recvCommand(conn) != Protocol::PAR_NUM){
+int MessageHandler::recvIntParameter(){
+    if(recvCommand() != Protocol::PAR_NUM){
         throw "Wrong parameter"; 
     }
-    return recvInt(conn);
+    return recvInt();
 }
 
-string recvStringParameter(Connection& conn){
-	Protocol code = recvCommand(conn);
+string MessageHandler::recvStringParameter(){
+	Protocol code = recvCommand();
 	if (code != Protocol::PAR_STRING) {
 		throw "Wrong parameter"; 
 	}
-	int n = recvInt(conn);
+	int n = recvInt();
 	if (n < 0) {
 		throw "Number of characters < 0";
 	}
