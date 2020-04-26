@@ -7,6 +7,7 @@
 #include "messageHandler.h"
 #include <vector>
 #include <sstream>
+#include <map>
 
 using std::endl;
 using std::string; 
@@ -17,6 +18,7 @@ using std::stoi;
 using std::exception;
 using std::istream; 
 using std::vector; 
+using std::map;
 //using std::count; 
 
 
@@ -60,12 +62,65 @@ void printInstructions(){
 	cout << "------------------------------------------------------------------------------------" << endl;
 }
 
-void listNewsgoups(){
-	 
+void handleEnd(MessageHandler &ms)
+{
+    if (ms.recvCommand() != Protocol::ANS_END)
+    {
+        cerr << "Error! Protocol not ok" << endl;
+    }
 }
 
-void listArticles(int newsgroup){
-	cout << "list articles in newsgroup " << newsgroup << endl;
+bool handleAck(MessageHandler &ms){
+	if(ms.recvCommand() == Protocol::ANS_ACK){
+		return true;
+	} else {
+		Protocol fault = ms.recvCommand();
+		if(fault == Protocol::ERR_NG_ALREADY_EXISTS)
+			cout << "Newsgroup already exists" << endl; 
+		if(fault == Protocol::ERR_NG_DOES_NOT_EXIST)
+			cout << "Newsgroup does not exist" << endl; 
+		if(fault == Protocol::ERR_ART_DOES_NOT_EXIST)
+			cout << "Article does not exist" << endl; 
+		return false; 
+	}
+}
+
+void listNewsgoups(MessageHandler& ms){
+	 ms.sendCode(Protocol::COM_LIST_NG); 
+	 ms.sendCode(Protocol::COM_END); 
+
+	 int nbrOfGroups; 
+
+	 cout << "Newsgroup-number: newsgroup-name" << endl; 
+
+	 if(ms.recvCommand() == Protocol::ANS_LIST_NG){
+	 	nbrOfGroups = ms.recvIntParameter(); 
+	 	for(int i = 0; i<nbrOfGroups; i++){
+	 		cout << ms.recvIntParameter() << ": " << ms.recvStringParameter() << endl; 
+	 	}
+	 	handleEnd(ms);
+	 } else {
+	 	cerr << "Error! Wrong protocol stuffies" << endl; 
+	 }
+}
+
+void listArticles(int newsgroup, MessageHandler& ms){
+	ms.sendCode(Protocol::COM_LIST_ART); 
+	ms.sendIntParameter(newsgroup); 
+	ms.sendCode(Protocol::COM_END); 
+
+	cout << "Article-number: article-name" << endl; 
+	if(ms.recvCommand() == Protocol::ANS_LIST_ART){
+		if(handleAck(ms)){
+			int nbrOfArticles = ms.recvIntParameter();
+			for(int i = 0; i<nbrOfArticles; i++){
+				cout << ms.recvIntParameter() << ": " << ms.recvStringParameter() << endl; 
+			}
+		}
+		handleEnd(ms); 
+	} else {
+		cerr << "Error! Something wrong" << endl; 
+	}
 }
 
 void readArticle(int newsgroup, int article){
@@ -92,6 +147,7 @@ int main(int argc, char* argv[])
 {
 	Connection conn = init(argc, argv); 
 	printInstructions();
+	MessageHandler ms(conn); 
 
 	while(true){
 		cout << "news> ";
@@ -115,11 +171,11 @@ int main(int argc, char* argv[])
 
    		if(first == "list"){
    			if(n == 1)
-   				listNewsgoups();
+   				listNewsgoups(ms);
    			else if(n == 2)
    				try{
    					int newsgroup = stoi(input.at(1)); 
-   					listArticles(newsgroup);
+   					listArticles(newsgroup, ms);
    				} catch (exception& e){
    					cout << "Wrong input, expected list <newsgroup-number>, e.g. 'list 2'" << endl; 
    				}
