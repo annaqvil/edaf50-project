@@ -14,7 +14,7 @@ testpermanentdatabase: permanentdatabase.o
 volatiledatabase.o: volatiledatabase.cc volatiledatabase.h database.h
 	g++ -c volatiledatabase.cc -std=c++11
 
-permanentdatabase.o: permanentdatabase.cc permanentdatabase.h database.h
+permanentdatabase.o: permanentdatabase.cc permanentdatabase.h database.h filesystemutils.h
 	g++ -c permanentdatabase.cc -std=c++11
 
 clean:
