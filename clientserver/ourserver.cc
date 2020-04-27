@@ -113,12 +113,12 @@ void readArticle(Database* db, MessageHandler& ms) {
 	int articleId = ms.recvIntParameter(); //TODO maybe try/catch
 	if (Protocol::COM_END == ms.recvCommand()) {
 		std::pair<Article,int> entry = db->readArticle(groupId, articleId);
+		ms.sendCode(Protocol::ANS_GET_ART);
 		if (entry.second != Database::OK) {
 			dbError(entry.second, ms);
 			return;
 		}
 		Article a = entry.first;
-		ms.sendCode(Protocol::ANS_GET_ART);
 		ms.sendStringParameter(a.title);
 		ms.sendStringParameter(a.author);
 		ms.sendStringParameter(a.text);
