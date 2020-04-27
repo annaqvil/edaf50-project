@@ -89,8 +89,10 @@ bool handleAck(MessageHandler &ms){
 			cerr << "Protocol Error. " << endl; 
 		return false; 
 	} 
-	else 
-		cerr << "Protocol Error. " << endl; 
+	else {
+		cerr << "Protocol Error. " << endl;
+		return false;
+	}
 }
 
 void listNewsgoups(MessageHandler& ms){
@@ -160,7 +162,7 @@ void createNewsgroup(string newsgroup, MessageHandler& ms){
 		if(handleAck(ms)){
 			cout << "Succesfully created newsgroup" << endl;
 		}
-		handleEnd(); 
+		handleEnd(ms); 
 	} else {
 		cerr << "Protocol Error. " << endl; 
 	}
@@ -177,10 +179,10 @@ void writeArticle(MessageHandler& ms){
     cout << "The newsgroup-number of the newsgroup you want to add the article to: ";
     while(!(cin >> group_nr)){
         cin.clear();
-        cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
+        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         cout << "Invalid input, you must type a number.  Try again: ";
     }
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     cout << "Title: ";
     getline(cin, title);
     cout << "Author: ";
@@ -199,10 +201,10 @@ void writeArticle(MessageHandler& ms){
     ms.sendStringParameter(text); 
     ms.sendCode(Protocol::COM_END); 
 
-    if(ms.recvCommand == Protocol::ANS_CREATE_ART){
+    if(ms.recvCommand() == Protocol::ANS_CREATE_ART){
     	if(handleAck(ms))
     		cout << "Article was succesfully created" << endl; 
-    	handleEnd(); 
+    	handleEnd(ms); 
     } else {
     	cerr << "Protocol Error. " << endl; 
     }
@@ -299,7 +301,7 @@ int main(int argc, char* argv[])
    			if(n==1){
    				cout << "Wrong input, name of newsgroup needs to be included" << endl; 
    			} else {
-   				for(int i=1; i<n; i++){
+   				for(unsigned int i=1; i<n; i++){
    					newsgroup += (input.at(i) + " "); 
    				}
    				createNewsgroup(newsgroup, ms); 
