@@ -131,8 +131,8 @@ bool PermanentDatabase::loadData() {
 
 	DIR* dir;
 	struct dirent* ent;
-	bool result;
 	if ((dir = opendir("db")) != NULL) {
+		bool result;
 		while ((ent = readdir(dir)) != NULL) {
 			std::string directoryName = ent->d_name;
 			if (directoryName!="."&&directoryName!=".."&&directoryName!="data") {
