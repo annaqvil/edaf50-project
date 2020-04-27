@@ -8,6 +8,8 @@
 #include <vector>
 #include <sstream>
 #include <map>
+#include <istream>
+#include <limits>
 
 using std::endl;
 using std::string; 
@@ -66,23 +68,29 @@ void handleEnd(MessageHandler &ms)
 {
     if (ms.recvCommand() != Protocol::ANS_END)
     {
-        cerr << "Error! Protocol not ok" << endl;
+        cerr << "Protocol Error. " << endl;
     }
 }
 
 bool handleAck(MessageHandler &ms){
-	if(ms.recvCommand() == Protocol::ANS_ACK){
+	Protocol ans = ms.recvCommand();
+	if(ans == Protocol::ANS_ACK){
 		return true;
-	} else {
+	} 
+	else if (ans == Protocol::ANS_NAK){
 		Protocol fault = ms.recvCommand();
 		if(fault == Protocol::ERR_NG_ALREADY_EXISTS)
 			cout << "Newsgroup already exists" << endl; 
-		if(fault == Protocol::ERR_NG_DOES_NOT_EXIST)
+		else if(fault == Protocol::ERR_NG_DOES_NOT_EXIST)
 			cout << "Newsgroup does not exist" << endl; 
-		if(fault == Protocol::ERR_ART_DOES_NOT_EXIST)
+		else if(fault == Protocol::ERR_ART_DOES_NOT_EXIST)
 			cout << "Article does not exist" << endl; 
+		else
+			cerr << "Protocol Error. " << endl; 
 		return false; 
-	}
+	} 
+	else 
+		cerr << "Protocol Error. " << endl; 
 }
 
 void listNewsgoups(MessageHandler& ms){
@@ -100,7 +108,7 @@ void listNewsgoups(MessageHandler& ms){
 	 	}
 	 	handleEnd(ms);
 	 } else {
-	 	cerr << "Error! Wrong protocol stuffies" << endl; 
+	 	cerr << "Protocol Error. " << endl; 
 	 }
 }
 
@@ -119,28 +127,119 @@ void listArticles(int newsgroup, MessageHandler& ms){
 		}
 		handleEnd(ms); 
 	} else {
-		cerr << "Error! Something wrong" << endl; 
+		cerr << "Protocol Error." << endl; 
 	}
 }
 
-void readArticle(int newsgroup, int article){
-	cout << "read article nr " << article << " in newsgroup " << newsgroup << endl; 
+void readArticle(int newsgroup, int article, MessageHandler& ms){
+	ms.sendCode(Protocol::COM_GET_ART);
+	ms.sendIntParameter(newsgroup);
+	ms.sendIntParameter(article);
+	ms.sendCode(Protocol::COM_END);
+
+	if(ms.recvCommand() == Protocol::ANS_GET_ART){
+		if(handleAck(ms)){
+			cout << ms.recvStringParameter() << " by: " << ms.recvStringParameter() << endl;
+			cout << ms.recvStringParameter() << endl; 
+		}
+		handleEnd(ms);
+	} else {
+		cerr << "Protocol Error." << endl; 
+	}
 }
 
-void createNewsgroup(string newsgroup){
-	cout << "create newsgroup with name: " << newsgroup << endl; 
+void createNewsgroup(string newsgroup, MessageHandler& ms){
+	/* COM_CREATE_NG string_p COM_END
+	ANS_CREATE_NG [ANS_ACK | ANS_NAK ERR_NG_ALREADY_EXISTS] ANS_END*/
+
+	ms.sendCode(Protocol::COM_CREATE_NG);
+	ms.sendStringParameter(newsgroup); 
+	ms.sendCode(Protocol::COM_END);
+
+	if(ms.recvCommand() == Protocol::ANS_CREATE_NG){
+		if(handleAck(ms)){
+			cout << "Succesfully created newsgroup" << endl;
+		}
+		handleEnd(); 
+	} else {
+		cerr << "Protocol Error. " << endl; 
+	}
 }
 
-void writeArticle(){
-	cout << "write article" << endl; 
+void writeArticle(MessageHandler& ms){
+	/*COM_CREATE_ART group_nr title author text COM_END
+	ANS_CREATE_ART [ANS_ACK | ANS_NAK ERR_NG_DOES_NOT_EXIST] ANS_END*/
+    int group_nr;
+    string title;
+    string author;
+    string text;
+    cout << "Provide the following information: " << endl;
+    cout << "The newsgroup-number of the newsgroup you want to add the article to: ";
+    while(!(cin >> group_nr)){
+        cin.clear();
+        cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
+        cout << "Invalid input, you must type a number.  Try again: ";
+    }
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cout << "Title: ";
+    getline(cin, title);
+    cout << "Author: ";
+    getline(cin, author);
+    cout << "Content (type :q on a single line to stop writing):" << endl;
+    string current;
+    while(current != ":q"){
+        getline(cin, current);
+        if(current != ":q")
+            text += current + "\n"; 
+    }
+    ms.sendCode(Protocol::COM_CREATE_ART);
+    ms.sendIntParameter(group_nr);
+    ms.sendStringParameter(title);
+    ms.sendStringParameter(author);
+    ms.sendStringParameter(text); 
+    ms.sendCode(Protocol::COM_END); 
+
+    if(ms.recvCommand == Protocol::ANS_CREATE_ART){
+    	if(handleAck(ms))
+    		cout << "Article was succesfully created" << endl; 
+    	handleEnd(); 
+    } else {
+    	cerr << "Protocol Error. " << endl; 
+    }
+
 }
 
-void deleteNewsgroup(int newsgroup){
-	cout << "delete newsgroup nr " << newsgroup << endl; 
+
+void deleteNewsgroup(int newsgroup, MessageHandler& ms){
+	/*COM_DELETE_NG num_p COM_END
+	ANS_DELETE_NG [ANS_ACK | ANS_NAK ERR_NG_DOES_NOT_EXIST] ANS_END*/
+	ms.sendCode(Protocol::COM_DELETE_NG);
+	ms.sendIntParameter(newsgroup); 
+	ms.sendCode(Protocol::COM_END); 
+
+	if(ms.recvCommand() == Protocol::ANS_DELETE_NG){
+		if(handleAck(ms))
+			cout << "Newsgroup succesfully deleted" << endl; 
+	} else{
+		cerr << "Protocol Error. " << endl; 
+	}
 }
 
-void deleteArticle(int newsgroup, int article){
-	cout << "delete article nr " << article << " from newsgroup " << newsgroup << endl; 
+void deleteArticle(int newsgroup, int article, MessageHandler& ms){
+	/*COM_DELETE_ART num_p num_p COM_END
+	ANS_DELETE_ART [ANS_ACK |
+	ANS_NAK [ERR_NG_DOES_NOT_EXIST | ERR_ART_DOES_NOT_EXIST]] ANS_END*/
+	ms.sendCode(Protocol::COM_DELETE_ART);
+	ms.sendIntParameter(newsgroup);
+	ms.sendIntParameter(article); 
+	ms.sendCode(Protocol::COM_END);
+
+	if(ms.recvCommand() == Protocol::ANS_DELETE_ART){
+		if(handleAck(ms))
+			cout << "Article succesfully deleted" << endl;
+	} else {
+		cerr << "Protocol Error. " << endl; 
+	}
 }
 
 int main(int argc, char* argv[])
@@ -187,7 +286,7 @@ int main(int argc, char* argv[])
 				try{
 					int newsgroup = stoi(input.at(1));
 					int article = stoi(input.at(2));
-					readArticle(newsgroup, article); 
+					readArticle(newsgroup, article, ms); 
 				} catch (exception& e){
 					cout << "Wrong input, expected 'read <newsgroup-number> <article-number>', e.g. 'read 2 3'" << endl; 
 				}
@@ -203,7 +302,7 @@ int main(int argc, char* argv[])
    				for(int i=1; i<n; i++){
    					newsgroup += (input.at(i) + " "); 
    				}
-   				createNewsgroup(newsgroup); 
+   				createNewsgroup(newsgroup, ms); 
    			}
    		}
    		else if(first == "delete"){
@@ -211,7 +310,7 @@ int main(int argc, char* argv[])
    				try{
    					int newsgroup = stoi(input.at(1));
 					int article = stoi(input.at(2));
-					deleteArticle(newsgroup, article); 
+					deleteArticle(newsgroup, article, ms); 
    				} catch (exception& e){
 					cout << "Wrong input, expected 'delete <newsgroup-number> <article-number>', e.g. 'delete 2 3'" << endl; 
 				}
@@ -219,7 +318,7 @@ int main(int argc, char* argv[])
    			else if(n == 2){
    				try{
    					int newsgroup = stoi(input.at(1));
-					deleteNewsgroup(newsgroup); 
+					deleteNewsgroup(newsgroup, ms); 
    				} catch (exception& e){
 					cout << "Wrong input, expected 'delete <newsgroup-number>', e.g. 'delete 2'" << endl; 
 				}
@@ -228,7 +327,7 @@ int main(int argc, char* argv[])
    			}
    		}
    		else if(first == "write"){
-   			writeArticle();
+   			writeArticle(ms);
    		}
    		else if(first == "help"){
    			printInstructions();
