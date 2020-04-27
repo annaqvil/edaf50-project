@@ -6,7 +6,7 @@
 #include <map>
 #include <set>
 
-class VolatileDatabase : Database
+class VolatileDatabase : public Database
 {
 public:
     VolatileDatabase() {}

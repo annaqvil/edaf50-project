@@ -20,6 +20,7 @@ using std::cerr;
 using std::endl;
 using std::stoi;
 using std::cout;
+using std::string;
 
 Server init(int argc, char* argv[])
 {
@@ -168,16 +169,20 @@ void writeArticle(Database* db, MessageHandler& ms) {
 void deleteNewsgroup(Database* db, MessageHandler& ms) {
 	//COM_DELETE_NG num_p COM_END
 	//ANS_DELETE_NG [ANS_ACK | ANS_NAK ERR_NG_DOES_NOT_EXIST] ANS_END
-	ms.sendCode(Protocol::COM_DELETE_NG);
-	ms.sendIntParameter(newsgroup);
-	ms.sendCode(Protocol::COM_END);
-
-	if (ms.recvCommand() == Protocol::ANS_DELETE_NG) {
-		if (handleAck(ms))
-			cout << "Newsgroup succesfully deleted" << endl;
+	int newsgroup = ms.recvIntParameter();
+	if (ms.recvCommand() == Protocol::COM_END) {
+		int res = db->deleteNewsgroup(newsgroup);
+		if (res == Database::OK) {
+			ms.sendCode(Protocol::ANS_DELETE_NG);
+			ms.sendCode(Protocol::ANS_ACK);
+			ms.sendCode(Protocol::ANS_END);
+		}
+		else {
+			dbError(res, ms);
+		}
 	}
 	else {
-		cerr << "Protocol Error. " << endl;
+		cerr << "Protocol error" << endl;
 	}
 }
 
@@ -209,7 +214,7 @@ int main(int argc, char* argv[])
 	if(argv[2] == "permanent"){
 		db = new PermanentDatabase();
 	} 
-	else if(srgv[2] == "volatile"){
+	else if(argv[2] == "volatile"){
 		db = new VolatileDatabase();
 	} else{
 		cout << "Wrong input, please write 'permanent' or 'volatile'" << endl;
