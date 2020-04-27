@@ -85,7 +85,7 @@ int MessageHandler::recvInt(){
 
 int MessageHandler::recvIntParameter(){
     if(recvCommand() != Protocol::PAR_NUM){
-        throw "Wrong parameter"; 
+        cerr << "Wrong parameter"; 
     }
     return recvInt();
 }
@@ -93,11 +93,11 @@ int MessageHandler::recvIntParameter(){
 string MessageHandler::recvStringParameter(){
 	Protocol code = recvCommand();
 	if (code != Protocol::PAR_STRING) {
-		throw "Wrong parameter"; 
+		cerr << "Wrong parameter"; 
 	}
 	int n = recvInt();
 	if (n < 0) {
-		throw "Number of characters < 0";
+		cerr << "Number of characters < 0";
 	}
 	string result;
 	try{
