@@ -24,6 +24,7 @@ using std::vector;
 using std::map;
 //using std::count; 
 
+map<Protocol, int> pro; 
 
 std::shared_ptr<Connection> init(int argc, char* argv[]){
 	if(argc != 3){
@@ -142,11 +143,13 @@ void readArticle(int newsgroup, int article, MessageHandler& ms){
 	Protocol p = ms.recvCommand();
 	if(p == Protocol::ANS_GET_ART){
 		if(handleAck(ms)){
+			ms.recvCommand(); 
 			cout << ms.recvStringParameter() << " by: " << ms.recvStringParameter() << endl;
 			cout << ms.recvStringParameter() << endl; 
 		}
 	} else {
-		cerr << "Protocol Error." << endl; 
+
+		cerr << "Protocol Error." << pro.at(p) << endl; 
 	}
 	handleEnd(ms);
 }
@@ -154,12 +157,12 @@ void readArticle(int newsgroup, int article, MessageHandler& ms){
 void createNewsgroup(string newsgroup, MessageHandler& ms){
 	/* COM_CREATE_NG string_p COM_END
 	ANS_CREATE_NG [ANS_ACK | ANS_NAK ERR_NG_ALREADY_EXISTS] ANS_END*/
-
 	ms.sendCode(Protocol::COM_CREATE_NG);
 	ms.sendStringParameter(newsgroup); 
 	ms.sendCode(Protocol::COM_END);
-
-	if(ms.recvCommand() == Protocol::ANS_CREATE_NG){
+	Protocol p = ms.recvCommand();
+	cout << "hej" << endl; 
+	if(p == Protocol::ANS_CREATE_NG){
 		if(handleAck(ms)){
 			cout << "Succesfully created newsgroup" << endl;
 		}
@@ -251,6 +254,34 @@ int main(int argc, char* argv[])
 	std::shared_ptr<Connection> conn = init(argc, argv); 
 	printInstructions();
 	MessageHandler ms(conn); 
+
+	pro.insert(std::pair<Protocol, int>(Protocol::UNDEFINED, 0));
+	pro.insert(std::pair<Protocol, int>(Protocol::COM_LIST_NG, 1));
+	pro.insert(std::pair<Protocol, int>(Protocol::COM_CREATE_NG, 2));
+	pro.insert(std::pair<Protocol, int>(Protocol::COM_DELETE_NG, 3));
+	pro.insert(std::pair<Protocol, int>(Protocol::COM_LIST_ART, 4));
+	pro.insert(std::pair<Protocol, int>(Protocol::COM_CREATE_ART, 5));
+	pro.insert(std::pair<Protocol, int>(Protocol::COM_DELETE_ART, 6));
+	pro.insert(std::pair<Protocol, int>(Protocol::COM_GET_ART, 7));
+	pro.insert(std::pair<Protocol, int>(Protocol::COM_END, 8));
+
+	pro.insert(std::pair<Protocol, int>(Protocol::ANS_LIST_NG, 20));
+	pro.insert(std::pair<Protocol, int>(Protocol::ANS_CREATE_NG, 21));
+	pro.insert(std::pair<Protocol, int>(Protocol::ANS_DELETE_NG, 22));
+	pro.insert(std::pair<Protocol, int>(Protocol::ANS_LIST_ART, 23));
+	pro.insert(std::pair<Protocol, int>(Protocol::ANS_CREATE_ART, 24));
+    pro.insert(std::pair<Protocol, int>(Protocol::ANS_DELETE_ART, 25));
+    pro.insert(std::pair<Protocol, int>(Protocol::ANS_GET_ART, 26));
+    pro.insert(std::pair<Protocol, int>(Protocol::ANS_END, 27));
+    pro.insert(std::pair<Protocol, int>(Protocol::ANS_ACK, 28));
+    pro.insert(std::pair<Protocol, int>(Protocol::ANS_NAK, 29));
+
+    pro.insert(std::pair<Protocol, int>(Protocol::PAR_STRING, 40));
+    pro.insert(std::pair<Protocol, int>(Protocol::PAR_NUM, 41));
+
+    pro.insert(std::pair<Protocol, int>(Protocol::ERR_NG_ALREADY_EXISTS, 50));
+    pro.insert(std::pair<Protocol, int>(Protocol::ERR_NG_DOES_NOT_EXIST, 51));
+    pro.insert(std::pair<Protocol, int>(Protocol::ERR_ART_DOES_NOT_EXIST, 52));
 
 	while(true){
 		cout << "news> ";
