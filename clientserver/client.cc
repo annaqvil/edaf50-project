@@ -25,7 +25,7 @@ using std::map;
 //using std::count; 
 
 
-Connection init(int argc, char* argv[]){
+std::shared_ptr<Connection> init(int argc, char* argv[]){
 	if(argc != 3){
 		// cerr är som cout för errors
 		cerr << "Usage: client host-name port-number" << endl; 
@@ -40,8 +40,8 @@ Connection init(int argc, char* argv[]){
 		exit(2); 		
 	}
 
-	Connection conn(argv[1], port); 
-	if(!conn.isConnected()){
+	std::shared_ptr<Connection> conn =  std::make_shared<Connection>(argv[1], port);
+	if(!conn->isConnected()){
 		cerr << "Connection attept failed" << endl; 
 		exit(3);
 	}
@@ -247,9 +247,9 @@ void deleteArticle(int newsgroup, int article, MessageHandler& ms){
 
 int main(int argc, char* argv[])
 {
-	Connection conn = init(argc, argv); 
+	std::shared_ptr<Connection> conn = init(argc, argv); 
 	printInstructions();
-	MessageHandler ms(std::make_shared(conn)); 
+	MessageHandler ms(conn); 
 
 	while(true){
 		cout << "news> ";

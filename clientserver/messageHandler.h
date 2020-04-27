@@ -20,7 +20,7 @@ class MessageHandler {
 	int recvIntParameter();
 	std::string recvStringParameter();
 private:
-	Connection& conn;
+	std::shared_ptr<Connection> conn;
 	unsigned char recvByte();
   	void sendByte(const char code);
 };
