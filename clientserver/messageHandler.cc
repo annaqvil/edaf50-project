@@ -15,12 +15,12 @@ using std::stoi;
 using std::exception;
 
 
-MessageHandler::MessageHandler(Connection& c): conn(c) {}
+MessageHandler::MessageHandler(std::shared_ptr<Connection>& c): conn(c) {}
 
 
 void MessageHandler::sendByte(const char code){
 	try{
-		conn.write(code); 
+		conn->write(code); 
 	} catch (exception& e){
 		cerr << "Could not send byte" << e.what() << endl; 
 	}
@@ -33,10 +33,10 @@ void MessageHandler::sendCode(Protocol code){
 
 void MessageHandler::sendInt(int value){
 	try {
-		conn.write((value >> 24) & 0xFF);
-        conn.write((value >> 16) & 0xFF);
-        conn.write((value >> 8) & 0xFF);
-        conn.write(value & 0xFF);
+		conn->write((value >> 24) & 0xFF);
+        conn->write((value >> 16) & 0xFF);
+        conn->write((value >> 8) & 0xFF);
+        conn->write(value & 0xFF);
 	} catch (exception& e){
 		cerr << "Could not send int " << e.what() << endl; 
 	}
@@ -58,7 +58,7 @@ void MessageHandler::sendStringParameter(string param){
 unsigned char MessageHandler::recvByte(){
 	int code = 0;
 	try{
-		code = conn.read(); 
+		code = conn->read(); 
 	}  catch (exception& e){
 		cerr << "Could not read " << e.what() << endl; 
 	}
@@ -68,7 +68,7 @@ unsigned char MessageHandler::recvByte(){
 Protocol MessageHandler::recvCommand(){
 	Protocol command = Protocol::UNDEFINED; 
 	try{
-		command = static_cast<const Protocol>(conn.read()); 
+		command = static_cast<const Protocol>(conn->read()); 
 	} catch (exception& e){
 		cerr << "Could not read command " << e.what() << endl; 
 	}
@@ -102,7 +102,7 @@ string MessageHandler::recvStringParameter(){
 	string result;
 	try{
 		for (int i = 0; i <= n; i++) {
-			result.push_back(conn.read());
+			result.push_back(conn->read());
 		}
 	} catch (exception& e){
 		cerr << "Could not read" << e.what() << endl;

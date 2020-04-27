@@ -4,12 +4,13 @@
 #include "connection.h"
 #include "connectionclosedexception.h"
 #include "protocol.h"
+#include <memory>
 
 #include <string>
 
 class MessageHandler {
 	public:
-	MessageHandler(Connection& c); //borde detta vara något annat typ pointer? Shared pointer?
+	MessageHandler(std::shared_ptr<Connection>& c); //borde detta vara något annat typ pointer? Shared pointer?
 	void sendCode(Protocol code);
 	void sendInt(int value);
 	void sendIntParameter(int param);

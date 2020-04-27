@@ -10,6 +10,7 @@
 #include <map>
 #include <istream>
 #include <limits>
+#include <memory>
 
 using std::endl;
 using std::string; 
@@ -248,7 +249,7 @@ int main(int argc, char* argv[])
 {
 	Connection conn = init(argc, argv); 
 	printInstructions();
-	MessageHandler ms(conn); 
+	MessageHandler ms(std::make_shared(conn)); 
 
 	while(true){
 		cout << "news> ";
