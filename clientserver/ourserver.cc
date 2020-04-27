@@ -128,63 +128,40 @@ void readArticle(Database* db, MessageHandler& ms) {
 
 void createNewsgroup(Database* db, MessageHandler& ms) {
 	std::string name = ms.recvStringParameter();
-
-	//LALLAA
-	ms.sendCode(Protocol::COM_END);
-
-	if (ms.recvCommand() == Protocol::ANS_CREATE_NG) {
-		if (handleAck(ms)) {
-			cout << "Succesfully created newsgroup" << endl;
+	if (Protocol::COM_END == ms.recvCommand()) {
+		int code = db->createNewsgroup(name);
+		if (code!=Database::OK) {
+			dbError(code, ms);
+			return;
 		}
-		handleEnd(ms);
-	}
-	else {
-		cerr << "Protocol Error. " << endl;
+		ms.sendCode(Protocol::ANS_CREATE_NG);
+		ms.sendCode(Protocol::ANS_ACK);
+		ms.sendCode(Protocol::ANS_END);
 	}
 }
 
 void writeArticle(Database* db, MessageHandler& ms) {
-	//COM_CREATE_ART group_nr title author text COM_END
-	//ANS_CREATE_ART [ANS_ACK | ANS_NAK ERR_NG_DOES_NOT_EXIST] ANS_END
 	int group_nr;
 	string title;
 	string author;
 	string text;
-	cout << "Provide the following information: " << endl;
-	cout << "The newsgroup-number of the newsgroup you want to add the article to: ";
-	while (!(cin >> group_nr)) {
-		cin.clear();
-		cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		cout << "Invalid input, you must type a number.  Try again: ";
-	}
-	cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-	cout << "Title: ";
-	getline(cin, title);
-	cout << "Author: ";
-	getline(cin, author);
-	cout << "Content (type :q on a single line to stop writing):" << endl;
-	string current;
-	while (current != ":q") {
-		getline(cin, current);
-		if (current != ":q")
-			text += current + "\n";
-	}
-	ms.sendCode(Protocol::COM_CREATE_ART);
-	ms.sendIntParameter(group_nr);
-	ms.sendStringParameter(title);
-	ms.sendStringParameter(author);
-	ms.sendStringParameter(text);
-	ms.sendCode(Protocol::COM_END);
+	group_nr = ms.recvIntParameter();
+	title = ms.recvStringParameter();
+	author = ms.recvStringParameter();
+	text = ms.recvStringParameter();
 
-	if (ms.recvCommand() == Protocol::ANS_CREATE_ART) {
-		if (handleAck(ms))
-			cout << "Article was succesfully created" << endl;
-		handleEnd(ms);
+	if (ms.recvCommand() != Protocol::COM_END) {
+		cerr << "Protocol error" << endl;
+		return;
 	}
-	else {
-		cerr << "Protocol Error. " << endl;
+	
+	int code = db->writeArticle(group_nr, title, author, text);
+	if (code != Database::OK) {
+		dbError(code, ms);
 	}
 
+	ms.sendCode(Protocol::ANS_ACK);
+	ms.sendCode(Protocol::ANS_END);
 }
 
 
