@@ -3,6 +3,7 @@
 #include <map>
 #include <iostream>
 
+
 //VolatileDatabase::VolatileDatabase() {}
 //VolatileDatabase::~VolatileDatabase() {}
 
@@ -13,30 +14,53 @@ std::vector<Newsgroup> VolatileDatabase::listNewsgroups() const {
 	}
 	return result;
 }    
-bool VolatileDatabase::createNewsgroup(const std::string name) {
+int VolatileDatabase::createNewsgroup(const std::string name) {
+	if (newsgroupNames.count(name)>0) {
+		return NAME_TAKEN;
+	}
 	Newsgroup ng;
 	int id = idCounter++;
 	ng.id = id;
 	ng.name = name;
 	newsgroups[id]=ng;
-	return true;
+	return OK;
 }
 
-bool VolatileDatabase::deleteNewsgroup(const int groupId) {
-	return newsgroups.erase(groupId);
-}
-std::vector<Article> VolatileDatabase::listArticles(const int groupId) const {
-	std::vector<Article> result;
-	for (auto thing : newsgroups.at(groupId).articles) {
-		result.push_back(thing.second);
+int VolatileDatabase::deleteNewsgroup(const int groupId) {
+	if (newsgroupExists(groupId)) {
+		newsgroups.erase(groupId);
+		return OK;
 	}
-	return result;
+	return NO_NG;
 }
 
-Article VolatileDatabase::readArticle(const int groupId, const int articleId) const {
-	return newsgroups.at(groupId).articles.at(articleId);
+std::pair<std::vector<Article>,int> VolatileDatabase::listArticles(const int groupId) const {
+	std::vector<Article> result;
+	if (newsgroupExists(groupId)) {
+		for (auto thing : newsgroups.at(groupId).articles) {
+			result.push_back(thing.second);
+		}
+		return std::make_pair(result,OK);
+	}
+	return std::make_pair(result, NO_NG);
 }
-bool VolatileDatabase::writeArticle(const int groupId, const std::string title, const std::string author, const std::string text) {
+
+std::pair<Article,int> VolatileDatabase::readArticle(const int groupId, const int articleId) const {
+	if (newsgroupExists(groupId)) {
+		if (articleExists(groupId,articleId)) {
+			return std::make_pair(newsgroups.at(groupId).articles.at(articleId),OK);
+		} else {
+			return std::make_pair(Article(), NO_ART);
+		}
+	}
+	return std::make_pair(Article(), NO_NG);
+}
+
+int VolatileDatabase::writeArticle(const int groupId, const std::string title, const std::string author, const std::string text) {
+	if (!newsgroupExists(groupId)) {
+		return NO_NG;
+	}
+	
 	int id = idCounter++;	
 	Article article;
 	article.author = author;
@@ -44,22 +68,27 @@ bool VolatileDatabase::writeArticle(const int groupId, const std::string title, 
 	article.text = text;
 	article.title = title;
 
-	if (newsgroups.count(groupId) > 0) {
-		newsgroups.at(groupId).articles[id] = article;
-		return true;
-	}
-	else {
-		std::cout << "Warning: News group not found." << std::endl;
-	}
-	return false;
+	newsgroups.at(groupId).articles[id] = article;
+	return OK;
 }
-bool VolatileDatabase::deleteArticle(const int groupId, const int articleId) {
-	if (newsgroups.count(groupId > 0)) {
-		return newsgroups.at(groupId).articles.erase(articleId);
-	} else {
-		std::cout << "Warning: News group not found." << std::endl;
+int VolatileDatabase::deleteArticle(const int groupId, const int articleId) {
+	if (newsgroupExists(groupId)) {
+		if (articleExists(groupId,articleId)) {
+			newsgroups.at(groupId).articles.erase(articleId);
+			return OK;
+		} else {
+			return NO_ART;
+		}
+		
 	}
-	return false;
+	return NO_NG;
+}
+
+bool VolatileDatabase::newsgroupExists(const int ng) const {
+	return (newsgroups.count(ng) > 0);
+}
+bool VolatileDatabase::articleExists(const int ng, const int art) const {
+	return (newsgroups.at(ng).articles.count(art) > 0);
 }
 
 /*int main() {

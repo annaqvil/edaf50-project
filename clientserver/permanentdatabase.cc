@@ -35,15 +35,18 @@ std::vector<Newsgroup> PermanentDatabase::listNewsgroups() const {
 		result.push_back(pair.second);
 	}
 	return result;
-}    
-bool PermanentDatabase::createNewsgroup(const std::string name) {
+}  
+
+int PermanentDatabase::createNewsgroup(const std::string name) {
+	if (newsgroupNames.count(name) > 0) {
+		return NAME_TAKEN;
+	}
+
 	Newsgroup ng;
 	int id = getNewId();
 	ng.id = id;
 	ng.name = name;
-	if (newsgroupNames.count(name)>0) {
-		return false;
-	}
+	
 	newsgroups[id]=ng;
 	std::string temp = "db" + dirSeparator + std::to_string(id);
 	if (makeDirectory(temp)==-1) {
@@ -54,12 +57,12 @@ bool PermanentDatabase::createNewsgroup(const std::string name) {
 	outfile << ng.name << std::endl;
 	outfile.close();
 
-	return true;
+	return OK;
 }
 
-bool PermanentDatabase::deleteNewsgroup(const int groupId) {
-	deleteFile("db" + dirSeparator + std::to_string(groupId) + dirSeparator + "data");
-	if (newsgroups.count(groupId) > 0) {
+int PermanentDatabase::deleteNewsgroup(const int groupId) {
+	if (newsgroupExists(groupId)) {
+		deleteFile("db" + dirSeparator + std::to_string(groupId) + dirSeparator + "data");
 		Newsgroup ng = newsgroups.at(groupId);
 		for (auto a : ng.articles) {
 			if (deleteFile("db" + dirSeparator + std::to_string(groupId) + dirSeparator + std::to_string(a.second.id)) != 0) {
@@ -71,22 +74,38 @@ bool PermanentDatabase::deleteNewsgroup(const int groupId) {
 			std::cout << "Warning: 'db" << dirSeparator << std::to_string(groupId) << "' could not be deleted." << std::endl;
 		}
 		newsgroups.erase(groupId);
-		return true;
+		return OK;
 	}
-	return false;
-}
-std::vector<Article> PermanentDatabase::listArticles(const int groupId) const {
-	std::vector<Article> result;
-	for (auto thing : newsgroups.at(groupId).articles) {
-		result.push_back(thing.second);
-	}
-	return result;
+	return NO_NG;
 }
 
-Article PermanentDatabase::readArticle(const int groupId, const int articleId) const {
-	return newsgroups.at(groupId).articles.at(articleId);
+std::pair<std::vector<Article>,int> PermanentDatabase::listArticles(const int groupId) const {
+	std::vector<Article> result;
+	if (newsgroupExists(groupId)) {
+		for (auto thing : newsgroups.at(groupId).articles) {
+			result.push_back(thing.second);
+		}
+		return std::make_pair(result,OK);
+	}
+	return std::make_pair(result, NO_NG);
 }
-bool PermanentDatabase::writeArticle(const int groupId, const std::string title, const std::string author, const std::string text) {
+
+std::pair<Article,int> PermanentDatabase::readArticle(const int groupId, const int articleId) const {
+	if (newsgroupExists(groupId)) {
+		if (articleExists(groupId, articleId)) {
+			return std::make_pair(newsgroups.at(groupId).articles.at(articleId),OK);
+		} else {
+			return std::make_pair(Article(), NO_ART);
+		}
+	}
+	return std::make_pair(Article(), NO_NG);
+}
+
+int PermanentDatabase::writeArticle(const int groupId, const std::string title, const std::string author, const std::string text) {
+	if (!newsgroupExists(groupId)) {
+		return NO_NG;
+	}
+	
 	int id = getNewId();
 	Article article;
 	article.author = author;
@@ -94,40 +113,31 @@ bool PermanentDatabase::writeArticle(const int groupId, const std::string title,
 	article.text = text;
 	article.title = title;
 
-	if (newsgroups.count(groupId) > 0) {
-		newsgroups.at(groupId).articles[id] = article;
-		
-		std::ofstream outfile("db" + dirSeparator + std::to_string(groupId) + dirSeparator + std::to_string(article.id));
-		outfile << article.title << std::endl;
-		outfile << article.author << std::endl;
-		outfile << article.text << std::endl;
-		outfile.close();
+	newsgroups.at(groupId).articles[id] = article;
 
-		return true;
-	}
-	else {
-		std::cout << "Warning: News group not found." << std::endl;
-	}
-	return false;
+	std::ofstream outfile("db" + dirSeparator + std::to_string(groupId) + dirSeparator + std::to_string(article.id));
+	outfile << article.title << std::endl;
+	outfile << article.author << std::endl;
+	outfile << article.text << std::endl;
+	outfile.close();
+
+	return OK;
 }
-bool PermanentDatabase::deleteArticle(const int groupId, const int articleId) {
-	if (newsgroups.count(groupId > 0)) {
+
+int PermanentDatabase::deleteArticle(const int groupId, const int articleId) {
+	if (newsgroupExists(groupId)) {
 		std::string address = "db" + dirSeparator + std::to_string(groupId) + dirSeparator + std::to_string(articleId);
 		if (deleteFile(address) != 0) {
 			std::cout << "Warning: In 'deleteArticle', could not delete file '" << address << "'" << std::endl;
 		}
 
 
-		return newsgroups.at(groupId).articles.erase(articleId);
-	} else {
-		std::cout << "Warning: News group not found." << std::endl;
+		return OK;
 	}
-	return false;
+	return NO_NG;
 }
 
 bool PermanentDatabase::loadData() {
-	//TODO
-	
 
 	DIR* dir;
 	struct dirent* ent;
@@ -217,6 +227,12 @@ int PermanentDatabase::getNewId() {
 	return id;
 }
 
+bool PermanentDatabase::newsgroupExists(const int ng) const {
+	return (newsgroups.count(ng) > 0);
+}
+bool PermanentDatabase::articleExists(const int ng, const int art) const {
+	return (newsgroups.at(ng).articles.count(art) > 0);
+}
 
 /*int main() {
 	Database* db = new PermanentDatabase();
