@@ -23,8 +23,8 @@ using std::cout;
 
 Server init(int argc, char* argv[])
 {
-	if (argc != 2) {
-		cerr << "Usage: ourserver port-number" << endl;
+	if (argc != 3) {
+		cerr << "Usage: ourserver port-number volatile|permanent" << endl;
 		exit(1);
 	}
 
@@ -228,7 +228,16 @@ void deleteArticle(Database* db, MessageHandler& ms) {
 int main(int argc, char* argv[])
 {
 	auto server = init(argc, argv);
-	Database* db = new PermanentDatabase(); // <-- titta ibland använder jag new
+	Database* db;
+	if(argv[2] == "permanent"){
+		db = new PermanentDatabase();
+	} 
+	else if(srgv[2] == "volatile"){
+		db = new VolatileDatabase();
+	} else{
+		cout << "Wrong input, please write 'permanent' or 'volatile'" << endl;
+		exit(2);
+	}
 
 	while (true) {
 		auto conn = server.waitForActivity();
