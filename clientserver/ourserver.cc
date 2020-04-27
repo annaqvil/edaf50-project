@@ -158,6 +158,7 @@ void writeArticle(Database* db, MessageHandler& ms) {
 	}
 	
 	int code = db->writeArticle(group_nr, title, author, text);
+	ms.sendCode(Protocol::ANS_CREATE_ART); 
 	if (code != Database::OK) {
 		dbError(code, ms);
 	}
