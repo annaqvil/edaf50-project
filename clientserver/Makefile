@@ -22,7 +22,7 @@ LDFLAGS =   -g
 
 # Targets
 
-PROGS = client
+PROGS = client ourserver
 
 all: libclientserver.a $(PROGS)
 	make -C test
@@ -34,6 +34,7 @@ libclientserver.a: connection.o server.o client.o messageHandler.o
 	ar rv libclientserver.a  connection.o server.o
 	ranlib libclientserver.a
 client: client.o connection.o messageHandler.o
+ourserver: ourserver.o connection.o messageHandler.o permanentdatabase.o volatiledatabase.o server.o
 
 # Phony targets
 .PHONY: all clean distclean

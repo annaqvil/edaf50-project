@@ -218,7 +218,7 @@ int PermanentDatabase::getNewId() {
 }
 
 
-int main() {
+/*int main() {
 	Database* db = new PermanentDatabase();
 	if (db->createNewsgroup("Fabbe news")) {
 		std::cout << "Success! ";
@@ -273,4 +273,4 @@ int main() {
 	std::cout << "Deleted newsgroup. Number of news groups is now: " << db2.listNewsgroups().size() << std::endl;
 	
 	
-}
+}*/

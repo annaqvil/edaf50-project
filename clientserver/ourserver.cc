@@ -20,7 +20,7 @@ using std::cout;
 Server init(int argc, char* argv[])
 {
 	if (argc != 2) {
-		cerr << "Usage: myserver port-number" << endl;
+		cerr << "Usage: ourserver port-number" << endl;
 		exit(1);
 	}
 

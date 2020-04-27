@@ -20,7 +20,7 @@ bool VolatileDatabase::createNewsgroup(const std::string name) {
 	ng.name = name;
 	newsgroups[id]=ng;
 	return true;
-};
+}
 
 bool VolatileDatabase::deleteNewsgroup(const int groupId) {
 	return newsgroups.erase(groupId);
@@ -62,7 +62,7 @@ bool VolatileDatabase::deleteArticle(const int groupId, const int articleId) {
 	return false;
 }
 
-int main() {
+/*int main() {
 	VolatileDatabase db;
 	if (db.createNewsgroup("´Fabbe news")) {
 		std::cout << "Success! ";
@@ -101,6 +101,8 @@ int main() {
 	} else {
 		std::cout << "Failure! ";
 	}
-	std::cout << "Deleted newsgroup. Number of news groups is now: " << db.listNewsgroups().size() << std::endl;
+	std::cout << "Deleted newsgroup. Number of news groups is now: " << db.listNewsgroups().size() << std::endl; 
+	}
+	*/
 	
-}
+
