@@ -6,7 +6,7 @@
 #include <map>
 #include <set>
 
-class PermanentDatabase : Database
+class PermanentDatabase : public Database
 {
 public:
     PermanentDatabase();
@@ -21,4 +21,7 @@ public:
 private:
     std::map<int, Newsgroup> newsgroups;
     std::set<std::string> newsgroupNames;
+    bool loadData();
+    bool readFiles(const std::string);
+    int getNewId();
 };
