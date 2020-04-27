@@ -125,7 +125,7 @@ void readArticle(Database* db, MessageHandler& ms) {
 		cerr << "Protocol Error." << endl;
 	}
 }
-/*
+
 void createNewsgroup(Database* db, MessageHandler& ms) {
 	std::string name = ms.recvStringParameter();
 
@@ -208,20 +208,22 @@ void deleteArticle(Database* db, MessageHandler& ms) {
 	//COM_DELETE_ART num_p num_p COM_END
 	//ANS_DELETE_ART [ANS_ACK |
 	//ANS_NAK [ERR_NG_DOES_NOT_EXIST | ERR_ART_DOES_NOT_EXIST]] ANS_END
-	ms.sendCode(Protocol::COM_DELETE_ART);
-	ms.sendIntParameter(newsgroup);
-	ms.sendIntParameter(article);
-	ms.sendCode(Protocol::COM_END);
-
-	if (ms.recvCommand() == Protocol::ANS_DELETE_ART) {
-		if (handleAck(ms))
-			cout << "Article succesfully deleted" << endl;
-	}
-	else {
-		cerr << "Protocol Error. " << endl;
+	int newsgroup = ms.recvIntParameter();
+	int article = ms.recvIntParameter();
+	if(ms.recvCommand() == Protocol::COM_END){
+		int res = db->deleteArticle(newsgroup, article);
+		if(res == Database::OK){
+			ms.sendCode(Protocol::ANS_DELETE_ART);
+			ms.sendCode(Protocol::ANS_ACK);
+			ms.sendCode(Protocol::ANS_END);
+		} else{
+			dbError(res, ms);
+		}
+	}else{
+		cerr << "Protocol error" << endl; 
 	}
 }
-*/
+
 
 int main(int argc, char* argv[])
 {
@@ -238,9 +240,26 @@ int main(int argc, char* argv[])
 			case Protocol::COM_LIST_NG:
 				listNewsgroups(db,ms);
 				break;
-			case Protocol::COM_CREATE_NG:
-				//createNewsgroup(db, ms);
+			case Protocol::COM_LIST_ART:
+				listArticles(db,ms); 
 				break;
+			case Protocol::COM_GET_ART:
+				readArticle(db, ms); 
+				break; 
+			case Protocol::COM_CREATE_NG:
+				createNewsgroup(db, ms);
+				break;
+			case Protocol::COM_DELETE_ART:
+				deleteArticle(db, ms);
+				break;
+			case Protocol::COM_DELETE_NG:
+				deleteNewsgroup(db, ms);
+				break;
+			case Protocol::COM_CREATE_ART:
+				writeArticle(db, ms); 
+				break;
+			default:
+				cerr << "Protocol Error" << endl; 
 			}
 		}
 		else {
