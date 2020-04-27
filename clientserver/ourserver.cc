@@ -15,6 +15,7 @@
 #include "permanentdatabase.h"
 #include "volatiledatabase.h"
 #include <vector>
+#include <string.h>
 
 using std::cerr;
 using std::endl;
@@ -211,10 +212,10 @@ int main(int argc, char* argv[])
 {
 	auto server = init(argc, argv);
 	Database* db;
-	if(argv[2] == "permanent"){
+	if(!strcmp(argv[2], "permanent")){
 		db = new PermanentDatabase();
 	} 
-	else if(argv[2] == "volatile"){
+	else if(!strcmp(argv[2], "volatile")){
 		db = new VolatileDatabase();
 	} else{
 		cout << "Wrong input, please write 'permanent' or 'volatile'" << endl;
