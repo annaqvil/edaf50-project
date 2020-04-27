@@ -172,9 +172,9 @@ void deleteNewsgroup(Database* db, MessageHandler& ms) {
 	//ANS_DELETE_NG [ANS_ACK | ANS_NAK ERR_NG_DOES_NOT_EXIST] ANS_END
 	int newsgroup = ms.recvIntParameter();
 	if (ms.recvCommand() == Protocol::COM_END) {
+		ms.sendCode(Protocol::ANS_DELETE_NG);
 		int res = db->deleteNewsgroup(newsgroup);
 		if (res == Database::OK) {
-			ms.sendCode(Protocol::ANS_DELETE_NG);
 			ms.sendCode(Protocol::ANS_ACK);
 			ms.sendCode(Protocol::ANS_END);
 		}
@@ -194,9 +194,9 @@ void deleteArticle(Database* db, MessageHandler& ms) {
 	int newsgroup = ms.recvIntParameter();
 	int article = ms.recvIntParameter();
 	if(ms.recvCommand() == Protocol::COM_END){
+		ms.sendCode(Protocol::ANS_DELETE_ART);
 		int res = db->deleteArticle(newsgroup, article);
 		if(res == Database::OK){
-			ms.sendCode(Protocol::ANS_DELETE_ART);
 			ms.sendCode(Protocol::ANS_ACK);
 			ms.sendCode(Protocol::ANS_END);
 		} else{
