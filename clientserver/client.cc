@@ -109,10 +109,10 @@ void listNewsgoups(MessageHandler& ms){
 	 	for(int i = 0; i<nbrOfGroups; i++){
 	 		cout << ms.recvIntParameter() << ": " << ms.recvStringParameter() << endl; 
 	 	}
-	 	handleEnd(ms);
 	 } else {
 	 	cerr << "Protocol Error. " << endl; 
 	 }
+	 handleEnd(ms);
 }
 
 void listArticles(int newsgroup, MessageHandler& ms){
@@ -128,10 +128,10 @@ void listArticles(int newsgroup, MessageHandler& ms){
 				cout << ms.recvIntParameter() << ": " << ms.recvStringParameter() << endl; 
 			}
 		}
-		handleEnd(ms); 
 	} else {
 		cerr << "Protocol Error." << endl; 
 	}
+	handleEnd(ms);
 }
 
 void readArticle(int newsgroup, int article, MessageHandler& ms){
@@ -139,16 +139,16 @@ void readArticle(int newsgroup, int article, MessageHandler& ms){
 	ms.sendIntParameter(newsgroup);
 	ms.sendIntParameter(article);
 	ms.sendCode(Protocol::COM_END);
-
-	if(ms.recvCommand() == Protocol::ANS_GET_ART){
+	Protocol p = ms.recvCommand();
+	if(p == Protocol::ANS_GET_ART){
 		if(handleAck(ms)){
 			cout << ms.recvStringParameter() << " by: " << ms.recvStringParameter() << endl;
 			cout << ms.recvStringParameter() << endl; 
 		}
-		handleEnd(ms);
 	} else {
 		cerr << "Protocol Error." << endl; 
 	}
+	handleEnd(ms);
 }
 
 void createNewsgroup(string newsgroup, MessageHandler& ms){
@@ -163,10 +163,10 @@ void createNewsgroup(string newsgroup, MessageHandler& ms){
 		if(handleAck(ms)){
 			cout << "Succesfully created newsgroup" << endl;
 		}
-		handleEnd(ms); 
 	} else {
 		cerr << "Protocol Error. " << endl; 
 	}
+	handleEnd(ms); 
 }
 
 void writeArticle(MessageHandler& ms){
@@ -205,11 +205,10 @@ void writeArticle(MessageHandler& ms){
     if(ms.recvCommand() == Protocol::ANS_CREATE_ART){
     	if(handleAck(ms))
     		cout << "Article was succesfully created" << endl; 
-    	handleEnd(ms); 
     } else {
     	cerr << "Protocol Error. " << endl; 
     }
-
+    handleEnd(ms);
 }
 
 
@@ -226,6 +225,7 @@ void deleteNewsgroup(int newsgroup, MessageHandler& ms){
 	} else{
 		cerr << "Protocol Error. " << endl; 
 	}
+	handleEnd(ms);
 }
 
 void deleteArticle(int newsgroup, int article, MessageHandler& ms){
@@ -243,6 +243,7 @@ void deleteArticle(int newsgroup, int article, MessageHandler& ms){
 	} else {
 		cerr << "Protocol Error. " << endl; 
 	}
+	handleEnd(ms);
 }
 
 int main(int argc, char* argv[])
