@@ -23,7 +23,7 @@ PermanentDatabase::PermanentDatabase() {
 	} else {
 		std::cout << "No data detected. Initiating database." << std::endl; 
 		std::ofstream outfile("db" + dirSeparator + "data");
-		outfile << 0;
+		outfile << 1;
 		outfile.close();
 	}
 }

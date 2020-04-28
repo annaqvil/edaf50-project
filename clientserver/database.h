@@ -46,5 +46,5 @@ public:
 protected:
     virtual bool newsgroupExists(const int ng) const = 0;
     virtual bool articleExists(const int ng, const int art) const = 0;
-    int idCounter = 0;
+    int idCounter = 1;
 };
