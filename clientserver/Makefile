@@ -50,6 +50,9 @@ distclean: clean
 	-rm $(SRC:.cc=.d) 
 	make -C test distclean
 
+install:
+	cp client ourserver ../bin
+
 
 # Include the *.d files
 -include $(SRC:.cc=.d)
