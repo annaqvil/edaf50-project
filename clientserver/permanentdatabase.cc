@@ -65,6 +65,7 @@ int PermanentDatabase::deleteNewsgroup(const int groupId) {
 	if (newsgroupExists(groupId)) {
 		deleteFile("db" + dirSeparator + std::to_string(groupId) + dirSeparator + "data");
 		Newsgroup ng = newsgroups.at(groupId);
+		newsgroupNames.erase(ng.name);
 		for (auto a : ng.articles) {
 			if (deleteFile("db" + dirSeparator + std::to_string(groupId) + dirSeparator + std::to_string(a.second.id)) != 0) {
 				std::cout << "Warning: 'db" << dirSeparator << std::to_string(groupId) << dirSeparator << std::to_string(a.second.id);
@@ -128,8 +129,12 @@ int PermanentDatabase::writeArticle(const int groupId, const std::string title, 
 int PermanentDatabase::deleteArticle(const int groupId, const int articleId) {
 	if (newsgroupExists(groupId)) {
 		std::string address = "db" + dirSeparator + std::to_string(groupId) + dirSeparator + std::to_string(articleId);
-		if (deleteFile(address) != 0) {
-			std::cout << "Warning: In 'deleteArticle', could not delete file '" << address << "'" << std::endl;
+		if (articleExists(groupId, articleId)) {
+			if (deleteFile(address) != 0) {
+				std::cout << "Warning: In 'deleteArticle', could not delete file '" << address << "'" << std::endl;
+			}
+		} else {
+			return NO_ART;
 		}
 
 
@@ -206,7 +211,7 @@ bool PermanentDatabase::readFiles(const std::string directory) {
 	}
 	else {
 		/* could not open directory */
-		std::cout << "Warning: In 'loadData', could not open newsgroup directory " << std::to_string(ngId) << std::endl;
+		std::cout << "Warning: In 'readFiles', could not open newsgroup directory " << std::to_string(ngId) << std::endl;
 		return false;
 	}
 	return false;
