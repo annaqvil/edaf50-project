@@ -68,8 +68,10 @@ void printInstructions(){
 
 void handleEnd(MessageHandler &ms)
 {
-    if (ms.recvCommand() != Protocol::ANS_END)
+	Protocol p = ms.recvCommand();
+    if (p!= Protocol::ANS_END)
     {
+    	cout << "Pro end: " << pro.at(p) << endl; 
         cerr << "Protocol Error. " << endl;
     }
 }
@@ -92,6 +94,7 @@ bool handleAck(MessageHandler &ms){
 		return false; 
 	} 
 	else {
+		cout << "Pro ack: " << pro.at(ans) << endl; 
 		cerr << "Protocol Error. " << endl;
 		return false;
 	}
@@ -143,13 +146,12 @@ void readArticle(int newsgroup, int article, MessageHandler& ms){
 	Protocol p = ms.recvCommand();
 	if(p == Protocol::ANS_GET_ART){
 		if(handleAck(ms)){
-			ms.recvCommand(); 
 			cout << ms.recvStringParameter() << " by: " << ms.recvStringParameter() << endl;
 			cout << ms.recvStringParameter() << endl; 
 		}
 	} else {
-
-		cerr << "Protocol Error." << pro.at(p) << endl; 
+		cout << "Pro read: " << pro.at(p) << endl;
+		cerr << "Protocol Error." << endl; 
 	}
 	handleEnd(ms);
 }
@@ -161,7 +163,6 @@ void createNewsgroup(string newsgroup, MessageHandler& ms){
 	ms.sendStringParameter(newsgroup); 
 	ms.sendCode(Protocol::COM_END);
 	Protocol p = ms.recvCommand();
-	cout << "hej" << endl; 
 	if(p == Protocol::ANS_CREATE_NG){
 		if(handleAck(ms)){
 			cout << "Succesfully created newsgroup" << endl;
