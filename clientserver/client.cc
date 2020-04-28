@@ -21,15 +21,10 @@ using std::stoi;
 using std::exception;
 using std::istream; 
 using std::vector; 
-using std::map;
-//using std::count; 
-
-map<Protocol, int> pro; 
 
 std::shared_ptr<Connection> init(int argc, char* argv[]){
 	if(argc != 3){
-		// cerr är som cout för errors
-		cerr << "Usage: client host-name port-number" << endl; 
+		cerr << "Usage: client hostname portnumber" << endl; 
 		exit(1); 
 	}
 
@@ -50,7 +45,6 @@ std::shared_ptr<Connection> init(int argc, char* argv[]){
 	return conn;
 }
 
- //all articles have unique numbers
 void printInstructions(){
 	cout << "------------------------------------------------------------------------------------" << endl;
 	cout<< "You can place the following commands: " << endl;
@@ -68,10 +62,8 @@ void printInstructions(){
 
 void handleEnd(MessageHandler &ms)
 {
-	Protocol p = ms.recvCommand();
-    if (p!= Protocol::ANS_END)
-    {
-    	cout << "Pro end: " << pro.at(p) << endl; 
+    if (ms.recvCommand() != Protocol::ANS_END)
+    { 
         cerr << "Protocol Error. " << endl;
     }
 }
@@ -94,7 +86,6 @@ bool handleAck(MessageHandler &ms){
 		return false; 
 	} 
 	else {
-		cout << "Pro ack: " << pro.at(ans) << endl; 
 		cerr << "Protocol Error. " << endl;
 		return false;
 	}
@@ -143,14 +134,12 @@ void readArticle(int newsgroup, int article, MessageHandler& ms){
 	ms.sendIntParameter(newsgroup);
 	ms.sendIntParameter(article);
 	ms.sendCode(Protocol::COM_END);
-	Protocol p = ms.recvCommand();
-	if(p == Protocol::ANS_GET_ART){
+	if(ms.recvCommand() == Protocol::ANS_GET_ART){
 		if(handleAck(ms)){
 			cout << ms.recvStringParameter() << " by: " << ms.recvStringParameter() << endl;
 			cout << ms.recvStringParameter() << endl; 
 		}
 	} else {
-		cout << "Pro read: " << pro.at(p) << endl;
 		cerr << "Protocol Error." << endl; 
 	}
 	handleEnd(ms);
@@ -162,8 +151,7 @@ void createNewsgroup(string newsgroup, MessageHandler& ms){
 	ms.sendCode(Protocol::COM_CREATE_NG);
 	ms.sendStringParameter(newsgroup); 
 	ms.sendCode(Protocol::COM_END);
-	Protocol p = ms.recvCommand();
-	if(p == Protocol::ANS_CREATE_NG){
+	if(ms.recvCommand() == Protocol::ANS_CREATE_NG){
 		if(handleAck(ms)){
 			cout << "Succesfully created newsgroup" << endl;
 		}
@@ -255,34 +243,6 @@ int main(int argc, char* argv[])
 	std::shared_ptr<Connection> conn = init(argc, argv); 
 	printInstructions();
 	MessageHandler ms(conn); 
-
-	pro.insert(std::pair<Protocol, int>(Protocol::UNDEFINED, 0));
-	pro.insert(std::pair<Protocol, int>(Protocol::COM_LIST_NG, 1));
-	pro.insert(std::pair<Protocol, int>(Protocol::COM_CREATE_NG, 2));
-	pro.insert(std::pair<Protocol, int>(Protocol::COM_DELETE_NG, 3));
-	pro.insert(std::pair<Protocol, int>(Protocol::COM_LIST_ART, 4));
-	pro.insert(std::pair<Protocol, int>(Protocol::COM_CREATE_ART, 5));
-	pro.insert(std::pair<Protocol, int>(Protocol::COM_DELETE_ART, 6));
-	pro.insert(std::pair<Protocol, int>(Protocol::COM_GET_ART, 7));
-	pro.insert(std::pair<Protocol, int>(Protocol::COM_END, 8));
-
-	pro.insert(std::pair<Protocol, int>(Protocol::ANS_LIST_NG, 20));
-	pro.insert(std::pair<Protocol, int>(Protocol::ANS_CREATE_NG, 21));
-	pro.insert(std::pair<Protocol, int>(Protocol::ANS_DELETE_NG, 22));
-	pro.insert(std::pair<Protocol, int>(Protocol::ANS_LIST_ART, 23));
-	pro.insert(std::pair<Protocol, int>(Protocol::ANS_CREATE_ART, 24));
-    pro.insert(std::pair<Protocol, int>(Protocol::ANS_DELETE_ART, 25));
-    pro.insert(std::pair<Protocol, int>(Protocol::ANS_GET_ART, 26));
-    pro.insert(std::pair<Protocol, int>(Protocol::ANS_END, 27));
-    pro.insert(std::pair<Protocol, int>(Protocol::ANS_ACK, 28));
-    pro.insert(std::pair<Protocol, int>(Protocol::ANS_NAK, 29));
-
-    pro.insert(std::pair<Protocol, int>(Protocol::PAR_STRING, 40));
-    pro.insert(std::pair<Protocol, int>(Protocol::PAR_NUM, 41));
-
-    pro.insert(std::pair<Protocol, int>(Protocol::ERR_NG_ALREADY_EXISTS, 50));
-    pro.insert(std::pair<Protocol, int>(Protocol::ERR_NG_DOES_NOT_EXIST, 51));
-    pro.insert(std::pair<Protocol, int>(Protocol::ERR_ART_DOES_NOT_EXIST, 52));
 
 	while(true){
 		cout << "news> ";

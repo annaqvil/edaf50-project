@@ -110,7 +110,7 @@ void listArticles(Database* db, MessageHandler& ms) {
 
 void readArticle(Database* db, MessageHandler& ms) {
 	int groupId = ms.recvIntParameter();
-	int articleId = ms.recvIntParameter(); //TODO maybe try/catch
+	int articleId = ms.recvIntParameter();
 	if (Protocol::COM_END == ms.recvCommand()) {
 		std::pair<Article, int> entry = db->readArticle(groupId, articleId);
 		ms.sendCode(Protocol::ANS_GET_ART);
