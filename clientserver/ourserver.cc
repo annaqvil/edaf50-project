@@ -161,6 +161,7 @@ void writeArticle(Database* db, MessageHandler& ms) {
 	ms.sendCode(Protocol::ANS_CREATE_ART); 
 	if (code != Database::OK) {
 		dbError(code, ms);
+		return;
 	}
 
 	ms.sendCode(Protocol::ANS_ACK);
