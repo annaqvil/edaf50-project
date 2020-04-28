@@ -83,8 +83,8 @@ void listNewsgroups(Database* db, MessageHandler& ms) {
 
 
 void listArticles(Database* db, MessageHandler& ms) {
-	int groupId =	ms.recvIntParameter();
-	
+	int groupId = ms.recvIntParameter();
+
 	if (ms.recvCommand() != Protocol::COM_END)
 	{
 		cerr << "Protocol Error. " << endl;
@@ -112,7 +112,7 @@ void readArticle(Database* db, MessageHandler& ms) {
 	int groupId = ms.recvIntParameter();
 	int articleId = ms.recvIntParameter(); //TODO maybe try/catch
 	if (Protocol::COM_END == ms.recvCommand()) {
-		std::pair<Article,int> entry = db->readArticle(groupId, articleId);
+		std::pair<Article, int> entry = db->readArticle(groupId, articleId);
 		ms.sendCode(Protocol::ANS_GET_ART);
 		if (entry.second != Database::OK) {
 			dbError(entry.second, ms);
@@ -124,7 +124,8 @@ void readArticle(Database* db, MessageHandler& ms) {
 		ms.sendStringParameter(a.author);
 		ms.sendStringParameter(a.text);
 		ms.sendCode(Protocol::ANS_END);
-	} else {
+	}
+	else {
 		cerr << "Protocol Error." << endl;
 	}
 }
@@ -134,7 +135,7 @@ void createNewsgroup(Database* db, MessageHandler& ms) {
 	if (Protocol::COM_END == ms.recvCommand()) {
 		ms.sendCode(Protocol::ANS_CREATE_NG);
 		int code = db->createNewsgroup(name);
-		if (code!=Database::OK) {
+		if (code != Database::OK) {
 			dbError(code, ms);
 			return;
 		}
@@ -157,9 +158,9 @@ void writeArticle(Database* db, MessageHandler& ms) {
 		cerr << "Protocol error" << endl;
 		return;
 	}
-	
+
 	int code = db->writeArticle(group_nr, title, author, text);
-	ms.sendCode(Protocol::ANS_CREATE_ART); 
+	ms.sendCode(Protocol::ANS_CREATE_ART);
 	if (code != Database::OK) {
 		dbError(code, ms);
 		return;
@@ -196,17 +197,19 @@ void deleteArticle(Database* db, MessageHandler& ms) {
 	//ANS_NAK [ERR_NG_DOES_NOT_EXIST | ERR_ART_DOES_NOT_EXIST]] ANS_END
 	int newsgroup = ms.recvIntParameter();
 	int article = ms.recvIntParameter();
-	if(ms.recvCommand() == Protocol::COM_END){
+	if (ms.recvCommand() == Protocol::COM_END) {
 		ms.sendCode(Protocol::ANS_DELETE_ART);
 		int res = db->deleteArticle(newsgroup, article);
-		if(res == Database::OK){
+		if (res == Database::OK) {
 			ms.sendCode(Protocol::ANS_ACK);
 			ms.sendCode(Protocol::ANS_END);
-		} else{
+		}
+		else {
 			dbError(res, ms);
 		}
-	}else{
-		cerr << "Protocol error" << endl; 
+	}
+	else {
+		cerr << "Protocol error" << endl;
 	}
 }
 
@@ -215,12 +218,13 @@ int main(int argc, char* argv[])
 {
 	auto server = init(argc, argv);
 	Database* db;
-	if(!strcmp(argv[2], "permanent")){
+	if (!strcmp(argv[2], "permanent")) {
 		db = new PermanentDatabase();
-	} 
-	else if(!strcmp(argv[2], "volatile")){
+	}
+	else if (!strcmp(argv[2], "volatile")) {
 		db = new VolatileDatabase();
-	} else{
+	}
+	else {
 		cout << "Wrong input, please write 'permanent' or 'volatile'" << endl;
 		exit(2);
 	}
@@ -229,32 +233,37 @@ int main(int argc, char* argv[])
 		auto conn = server.waitForActivity();
 		MessageHandler ms(conn);
 		if (conn != nullptr) {
-			//try {
-			Protocol p = ms.recvCommand();
-			switch (p) {
-			case Protocol::COM_LIST_NG:
-				listNewsgroups(db,ms);
-				break;
-			case Protocol::COM_LIST_ART:
-				listArticles(db,ms); 
-				break;
-			case Protocol::COM_GET_ART:
-				readArticle(db, ms); 
-				break; 
-			case Protocol::COM_CREATE_NG:
-				createNewsgroup(db, ms);
-				break;
-			case Protocol::COM_DELETE_ART:
-				deleteArticle(db, ms);
-				break;
-			case Protocol::COM_DELETE_NG:
-				deleteNewsgroup(db, ms);
-				break;
-			case Protocol::COM_CREATE_ART:
-				writeArticle(db, ms); 
-				break;
-			default:
-				cerr << "Protocol Error" << endl; 
+			try {
+				Protocol p = ms.recvCommand();
+				switch (p) {
+				case Protocol::COM_LIST_NG:
+					listNewsgroups(db, ms);
+					break;
+				case Protocol::COM_LIST_ART:
+					listArticles(db, ms);
+					break;
+				case Protocol::COM_GET_ART:
+					readArticle(db, ms);
+					break;
+				case Protocol::COM_CREATE_NG:
+					createNewsgroup(db, ms);
+					break;
+				case Protocol::COM_DELETE_ART:
+					deleteArticle(db, ms);
+					break;
+				case Protocol::COM_DELETE_NG:
+					deleteNewsgroup(db, ms);
+					break;
+				case Protocol::COM_CREATE_ART:
+					writeArticle(db, ms);
+					break;
+				default:
+					cerr << "Protocol Error" << endl;
+				}
+			}
+			catch (ConnectionClosedException&) {
+				server.deregisterConnection(conn);
+				cout << "Client closed connection." << endl;
 			}
 		}
 		else {
