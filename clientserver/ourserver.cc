@@ -131,12 +131,12 @@ void readArticle(Database* db, MessageHandler& ms) {
 void createNewsgroup(Database* db, MessageHandler& ms) {
 	std::string name = ms.recvStringParameter();
 	if (Protocol::COM_END == ms.recvCommand()) {
+		ms.sendCode(Protocol::ANS_CREATE_NG);
 		int code = db->createNewsgroup(name);
 		if (code!=Database::OK) {
 			dbError(code, ms);
 			return;
 		}
-		ms.sendCode(Protocol::ANS_CREATE_NG);
 		ms.sendCode(Protocol::ANS_ACK);
 		ms.sendCode(Protocol::ANS_END);
 	}

@@ -101,7 +101,7 @@ string MessageHandler::recvStringParameter(){
 	}
 	string result;
 	try{
-		for (int i = 0; i <= n; i++) {
+		for (int i = 0; i < n; i++) {
 			result.push_back(conn->read());
 		}
 	} catch (exception& e){

@@ -41,6 +41,7 @@ int PermanentDatabase::createNewsgroup(const std::string name) {
 	if (newsgroupNames.count(name) > 0) {
 		return NAME_TAKEN;
 	}
+	newsgroupNames.insert(name);
 
 	Newsgroup ng;
 	int id = getNewId();
