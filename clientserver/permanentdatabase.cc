@@ -130,6 +130,7 @@ int PermanentDatabase::deleteArticle(const int groupId, const int articleId) {
 	if (newsgroupExists(groupId)) {
 		std::string address = "db" + dirSeparator + std::to_string(groupId) + dirSeparator + std::to_string(articleId);
 		if (articleExists(groupId, articleId)) {
+			newsgroups.at(groupId).articles.erase(articleId);
 			if (deleteFile(address) != 0) {
 				std::cout << "Warning: In 'deleteArticle', could not delete file '" << address << "'" << std::endl;
 			}
