@@ -116,9 +116,10 @@ void readArticle(Database* db, MessageHandler& ms) {
 		ms.sendCode(Protocol::ANS_GET_ART);
 		if (entry.second != Database::OK) {
 			dbError(entry.second, ms);
-			return;
+			return; 
 		}
 		Article a = entry.first;
+		ms.sendCode(Protocol::ANS_ACK);
 		ms.sendStringParameter(a.title);
 		ms.sendStringParameter(a.author);
 		ms.sendStringParameter(a.text);
